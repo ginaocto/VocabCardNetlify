@@ -1,4 +1,8 @@
-import React, { useState, useEffect, useMemo, useRef } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
+import { supabase } from "./lib/supabase";
+import AuthPage from "./components/AuthPage";
+import { useUserData } from "./hooks/useUserData";
+import type { User } from "@supabase/supabase-js";
 import { 
   BookOpen, 
   CheckCircle2, 
@@ -60,6 +64,22 @@ const CLEANED_ALL_PRE_CURATED_VOCABULARY = [
 ];
 
 export default function App() {
+  // --- AUTH ---
+  const [user, setUser] = useState<User | null>(null);
+  const [authLoading, setAuthLoading] = useState(true);
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => {
+      setUser(data.session?.user ?? null);
+      setAuthLoading(false);
+    });
+    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+    });
+    return () => listener.subscription.unsubscribe();
+  }, []);
+
+  const { data: userData, save: saveUserData, loading: userDataLoading } = useUserData(user);
   // --- STATE DECLARATIONS ---
   const [scenarios, setScenarios] = useState<{ id: string; name: string; desc: string; icon: any; isCustom?: boolean }[]>([
     { id: 'home', name: "Lingkungan Rumah", desc: "Rumah, dapur, barang kamar tidur & percakapan keluarga.", icon: HomeIcon },
@@ -137,103 +157,56 @@ export default function App() {
 
   // --- LOCAL PERSISTENCE ---
   useEffect(() => {
-    // Load local storage states on mount
-    const savedMemorized = localStorage.getItem("vocab_memorized_ids");
-    if (savedMemorized) {
-      setMemorizedIds(JSON.parse(savedMemorized));
-    }
+  if (userDataLoading || !user) return;
 
-    const savedStarred = localStorage.getItem("vocab_starred_ids");
-    if (savedStarred) {
-      setStarredIds(JSON.parse(savedStarred));
-    }
+  setMemorizedIds(userData.memorized_ids);
+  setStarredIds(userData.starred_ids);
+  setStreak(userData.streak_days);
 
-    const savedStreak = localStorage.getItem("vocab_streak_days");
-    if (savedStreak) {
-      setStreak(parseInt(savedStreak, 10));
-    } else {
-      // Default to 1 day if not present, and update date if possible
-      localStorage.setItem("vocab_streak_days", "1");
-    }
+  // Custom words
+  const cleanedCustom = userData.custom_words.filter((item: any, _: number, self: any[]) => {
+    return self.findIndex((t: any) =>
+      t.category === item.category &&
+      t.english.trim().toLowerCase() === item.english.trim().toLowerCase()
+    ) === self.indexOf(item);
+  });
+  setCustomWords(cleanedCustom);
 
-    const savedCustom = localStorage.getItem("vocab_custom_words");
-    if (savedCustom) {
-      try {
-        const parsed: VocabularyItem[] = JSON.parse(savedCustom) || [];
-        const cleanedCustom: VocabularyItem[] = [];
-        const seenCombined = new Set<string>();
+  // Custom scenarios
+  if (userData.custom_scenarios.length > 0) {
+    const defaultScenarios = [
+      { id: 'home', name: "Lingkungan Rumah", desc: "Rumah, dapur, barang kamar tidur & percakapan keluarga.", icon: HomeIcon },
+      { id: 'office', name: "Dunia Kantor", desc: "Rapat, deadline, dokumen kerja, karir & gaji.", icon: Briefcase },
+      { id: 'others', name: "Tempat Umum & Sosial", desc: "Perjalanan, makan luar, belanja di swalayan & apotek.", icon: Compass }
+    ];
+    setScenarios([...defaultScenarios, ...userData.custom_scenarios.map((sc: any) => ({
+      ...sc, icon: Sparkles, isCustom: true
+    }))]);
+  }
 
-        CLEANED_HOME_VOCABULARY.forEach(item => seenCombined.add(`home:${item.english.trim().toLowerCase()}`));
-        CLEANED_OFFICE_VOCABULARY.forEach(item => seenCombined.add(`office:${item.english.trim().toLowerCase()}`));
-        CLEANED_OTHERS_VOCABULARY.forEach(item => seenCombined.add(`others:${item.english.trim().toLowerCase()}`));
-
-        parsed.forEach(item => {
-          const key = `${item.category}:${item.english.trim().toLowerCase()}`;
-          if (!seenCombined.has(key)) {
-            seenCombined.add(key);
-            cleanedCustom.push(item);
-          }
-        });
-
-        setCustomWords(cleanedCustom);
-        localStorage.setItem("vocab_custom_words", JSON.stringify(cleanedCustom));
-      } catch (e) {
-        console.error("Failed parsing or cleaning custom words", e);
-      }
-    }
-
-    const savedScenarios = localStorage.getItem("vocab_custom_scenarios");
-    if (savedScenarios) {
-      try {
-        const parsed = JSON.parse(savedScenarios);
-        const defaultScenarios = [
-          { id: 'home', name: "Lingkungan Rumah", desc: "Rumah, dapur, barang kamar tidur & percakapan keluarga.", icon: HomeIcon },
-          { id: 'office', name: "Dunia Kantor", desc: "Rapat, deadline, dokumen kerja, karir & gaji.", icon: Briefcase },
-          { id: 'others', name: "Tempat Umum & Sosial", desc: "Perjalanan, makan luar, belanja di swalayan & apotek.", icon: Compass }
-        ];
-        const customScenarios = parsed.map((sc: any) => ({
-          ...sc,
-          icon: Sparkles,
-          isCustom: true
-        }));
-        setScenarios([...defaultScenarios, ...customScenarios]);
-      } catch (e) {
-        console.error("Failed to parse custom scenarios", e);
-      }
-    }
-
-    // Daily streak logic simulation (compares actual calendar days)
-    const lastActiveDate = localStorage.getItem("vocab_last_active_date");
-    const todayStr = new Date().toDateString();
-    
-    if (lastActiveDate && lastActiveDate !== todayStr) {
-      const lastDate = new Date(lastActiveDate);
-      const todayDate = new Date(todayStr);
-      const diffTime = Math.abs(todayDate.getTime() - lastDate.getTime());
-      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-      
-      if (diffDays === 1) {
-        // Continued streak
-        const nextStreak = (savedStreak ? parseInt(savedStreak, 10) : 1) + 1;
-        setStreak(nextStreak);
-        localStorage.setItem("vocab_streak_days", nextStreak.toString());
-      } else if (diffDays > 1) {
-        // Streak reset
-        setStreak(1);
-        localStorage.setItem("vocab_streak_days", "1");
-      }
-    }
-    localStorage.setItem("vocab_last_active_date", todayStr);
-  }, []);
+  // Streak logic
+  const todayStr = new Date().toDateString();
+  if (userData.last_active_date && userData.last_active_date !== todayStr) {
+    const diff = Math.ceil(
+      Math.abs(new Date(todayStr).getTime() - new Date(userData.last_active_date).getTime())
+      / (1000 * 60 * 60 * 24)
+    );
+    const newStreak = diff === 1 ? userData.streak_days + 1 : 1;
+    setStreak(newStreak);
+    saveUserData({ streak_days: newStreak, last_active_date: todayStr });
+  } else if (!userData.last_active_date) {
+    saveUserData({ last_active_date: todayStr });
+  }
+}, [userDataLoading, user]);
 
   const saveMemorized = (newIds: string[]) => {
     setMemorizedIds(newIds);
-    localStorage.setItem("vocab_memorized_ids", JSON.stringify(newIds));
+    saveUserData({ memorized_ids: newIds });
   };
 
   const saveStarred = (newIds: string[]) => {
     setStarredIds(newIds);
-    localStorage.setItem("vocab_starred_ids", JSON.stringify(newIds));
+    saveUserData({ starred_ids: newIds });
   };
 
   // --- VOCABULARY LIST RESOLUTION ---
@@ -510,6 +483,7 @@ export default function App() {
         setStreak(1);
         localStorage.setItem("vocab_streak_days", "1");
         setCustomWords([]);
+        saveUserData({ custom_words: [], memorized_ids: [], starred_ids: [], streak_days: 1 });
         localStorage.removeItem("vocab_custom_words");
         setCurrentIndex(0);
         setIsFlipped(false);
@@ -731,6 +705,7 @@ export default function App() {
         });
 
         setCustomWords(cleanedCustom);
+        saveUserData({ custom_words: cleanedCustom });
         localStorage.setItem("vocab_custom_words", JSON.stringify(cleanedCustom));
 
         const catName = getCategoryTitleInIndonesian(category);
@@ -805,6 +780,7 @@ export default function App() {
         });
 
         setCustomWords(cleanedCustom);
+        saveUserData({ custom_words: cleanedCustom });
         localStorage.setItem("vocab_custom_words", JSON.stringify(cleanedCustom));
         
         alert(`Berhasil menambahkan kosakata baru bertema "${categoryName}" dari Gemini AI!`);
@@ -898,6 +874,7 @@ export default function App() {
 
     const updatedScenarios = [...scenarios, newScenarioObj];
     setScenarios(updatedScenarios);
+    saveUserData({ custom_scenarios: updatedScenarios.filter(s => s.isCustom).map(s => ({ id: s.id, name: s.name, desc: s.desc, isCustom: true })) }); // ADD THIS
 
     const serializable = updatedScenarios
       .filter(s => s.isCustom)
@@ -926,6 +903,7 @@ export default function App() {
       onConfirm: () => {
         const updatedScenarios = scenarios.filter(s => s.id !== scId);
         setScenarios(updatedScenarios);
+        saveUserData({ custom_scenarios: updatedScenarios.filter(s => s.isCustom).map(s => ({ id: s.id, name: s.name, desc: s.desc, isCustom: true })) });
 
         const serializable = updatedScenarios
           .filter(s => s.isCustom)
@@ -934,6 +912,7 @@ export default function App() {
 
         const updatedCustomWords = customWords.filter(w => w.category !== scId);
         setCustomWords(updatedCustomWords);
+        saveUserData({ custom_words: updatedCustomWords });
         localStorage.setItem("vocab_custom_words", JSON.stringify(updatedCustomWords));
 
         if (category === scId) {
@@ -961,6 +940,7 @@ export default function App() {
       onConfirm: () => {
         const updated = customWords.filter(w => w.id !== id);
         setCustomWords(updated);
+        saveUserData({ custom_words: updated });
         localStorage.setItem("vocab_custom_words", JSON.stringify(updated));
         
         // Ensure currentIndex is safely bounded to the new list size
@@ -1062,6 +1042,15 @@ export default function App() {
     return cat.charAt(0).toUpperCase() + cat.slice(1);
   };
 
+      if (authLoading || userDataLoading) {
+      return (
+        <div className="min-h-screen flex items-center justify-center bg-blue-50">
+          <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
+        </div>
+      );
+    }
+
+    if (!user) return <AuthPage />;
   return (
     <div className="min-h-screen bg-transparent flex flex-col font-sans transition-colors duration-200">
       
@@ -1110,6 +1099,13 @@ export default function App() {
             >
               <RotateCcw className="h-4 w-4" />
               <span className="hidden sm:inline font-semibold">Reset Progress</span>
+            </button>
+            <button
+              onClick={() => supabase.auth.signOut()}
+              title="Logout dari akun Anda"
+              className="p-2 sm:px-3 sm:py-2 text-xs text-slate-400 hover:text-red-500 transition-colors"
+            >
+              <span className="hidden sm:inline font-semibold">Logout</span>
             </button>
           </div>
         </div>
