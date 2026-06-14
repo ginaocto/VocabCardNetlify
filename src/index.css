@@ -1,0 +1,51 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-display: "Outfit", sans-serif;
+  --font-mono: "Fira Code", monospace;
+
+  --color-brand-blue-50: #eff6ff;
+  --color-brand-blue-100: #dbeafe;
+  --color-brand-blue-500: #3b82f6;
+  --color-brand-blue-600: #2563eb;
+  --color-brand-blue-700: #1d4ed8;
+
+  --shadow-premium: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
+  --shadow-progress-glow: 0 0 15px rgba(59, 130, 246, 0.3);
+}
+
+@layer base {
+  body {
+    background: linear-gradient(135deg, #f0f4f8 0%, #e2e8f0 100%);
+    color: #1e293b;
+    -webkit-font-smoothing: antialiased;
+    min-height: 100vh;
+  }
+}
+
+/* Glass-card styling matching the Sleek theme */
+.glass-card {
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  box-shadow: var(--shadow-premium);
+  border-radius: 24px;
+}
+
+/* Custom flip animation utility classes */
+.perspective-1000 {
+  perspective: 1000px;
+}
+.backface-hidden {
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+.rotate-y-180 {
+  transform: rotateY(180deg);
+}
+.transform-style-3d {
+  transform-style: preserve-3d;
+}

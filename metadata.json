@@ -1,0 +1,6 @@
+{
+  "name": "Daily English Vocab Builder",
+  "description": "Sebuah aplikasi flashcard interaktif untuk menghafal 50 kosakata bahasa Inggris setiap harinya, diurutkan dari yang paling sering digunakan di rumah, kantor, dan situasi lainnya lengkap dengan gambar, pengucapan (phonetics), dan contoh kalimat.",
+  "requestFramePermissions": ["microphone"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

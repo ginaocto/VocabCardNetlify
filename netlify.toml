@@ -1,0 +1,32 @@
+[build]
+  command = "npm install && npm run build"
+  publish = "dist"
+  functions = "netlify/functions"
+
+[functions]
+  node_bundler = "esbuild"
+  external_node_modules = ["@google/genai"]
+
+# Redirect /api/gemini/custom-vocab → Netlify Function
+[[redirects]]
+  from = "/api/gemini/custom-vocab"
+  to = "/.netlify/functions/gemini-custom-vocab"
+  status = 200
+
+# Redirect /api/gemini/bulk-more-vocab → Netlify Function
+[[redirects]]
+  from = "/api/gemini/bulk-more-vocab"
+  to = "/.netlify/functions/gemini-bulk-vocab"
+  status = 200
+
+# Redirect /api/ai-config → always return "AI ready" (key is set via env var)
+[[redirects]]
+  from = "/api/ai-config"
+  to = "/.netlify/functions/ai-config"
+  status = 200
+
+# SPA fallback — must be last
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
