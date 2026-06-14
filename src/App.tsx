@@ -157,47 +157,47 @@ export default function App() {
 
   // --- LOCAL PERSISTENCE ---
   useEffect(() => {
-  if (userDataLoading || !user) return;
+    if (!user || !userData || userDataLoading) return;
 
-  setMemorizedIds(userData.memorized_ids);
-  setStarredIds(userData.starred_ids);
-  setStreak(userData.streak_days);
+    setMemorizedIds(userData.memorized_ids);
+    setStarredIds(userData.starred_ids);
+    setStreak(userData.streak_days);
 
-  // Custom words
-  const cleanedCustom = userData.custom_words.filter((item: any, _: number, self: any[]) => {
-    return self.findIndex((t: any) =>
-      t.category === item.category &&
-      t.english.trim().toLowerCase() === item.english.trim().toLowerCase()
-    ) === self.indexOf(item);
-  });
-  setCustomWords(cleanedCustom);
+    const cleanedCustom = userData.custom_words.filter((item: any, _: number, self: any[]) => {
+      return self.findIndex((t: any) =>
+        t.category === item.category &&
+        t.english.trim().toLowerCase() === item.english.trim().toLowerCase()
+      ) === self.indexOf(item);
+    });
+    setCustomWords(cleanedCustom);
 
-  // Custom scenarios
-  if (userData.custom_scenarios.length > 0) {
-    const defaultScenarios = [
-      { id: 'home', name: "Lingkungan Rumah", desc: "Rumah, dapur, barang kamar tidur & percakapan keluarga.", icon: HomeIcon },
-      { id: 'office', name: "Dunia Kantor", desc: "Rapat, deadline, dokumen kerja, karir & gaji.", icon: Briefcase },
-      { id: 'others', name: "Tempat Umum & Sosial", desc: "Perjalanan, makan luar, belanja di swalayan & apotek.", icon: Compass }
-    ];
-    setScenarios([...defaultScenarios, ...userData.custom_scenarios.map((sc: any) => ({
-      ...sc, icon: Sparkles, isCustom: true
-    }))]);
-  }
+    if (userData.custom_scenarios.length > 0) {
+      const defaultScenarios = [
+        { id: 'home', name: "Lingkungan Rumah", desc: "Rumah, dapur, barang kamar tidur & percakapan keluarga.", icon: HomeIcon },
+        { id: 'office', name: "Dunia Kantor", desc: "Rapat, deadline, dokumen kerja, karir & gaji.", icon: Briefcase },
+        { id: 'others', name: "Tempat Umum & Sosial", desc: "Perjalanan, makan luar, belanja di swalayan & apotek.", icon: Compass }
+      ];
+      setScenarios([...defaultScenarios, ...userData.custom_scenarios.map((sc: any) => ({
+        ...sc, icon: Sparkles, isCustom: true
+      }))]);
+    }
 
-  // Streak logic
-  const todayStr = new Date().toDateString();
-  if (userData.last_active_date && userData.last_active_date !== todayStr) {
-    const diff = Math.ceil(
-      Math.abs(new Date(todayStr).getTime() - new Date(userData.last_active_date).getTime())
-      / (1000 * 60 * 60 * 24)
-    );
-    const newStreak = diff === 1 ? userData.streak_days + 1 : 1;
-    setStreak(newStreak);
-    saveUserData({ streak_days: newStreak, last_active_date: todayStr });
-  } else if (!userData.last_active_date) {
-    saveUserData({ last_active_date: todayStr });
-  }
-}, [userDataLoading, user]);
+    // Only update streak/date if data is fully loaded from Supabase
+    if (userData.memorized_ids !== undefined) {
+      const todayStr = new Date().toDateString();
+      if (userData.last_active_date && userData.last_active_date !== todayStr) {
+        const diff = Math.ceil(
+          Math.abs(new Date(todayStr).getTime() - new Date(userData.last_active_date).getTime())
+          / (1000 * 60 * 60 * 24)
+        );
+        const newStreak = diff === 1 ? userData.streak_days + 1 : 1;
+        setStreak(newStreak);
+        saveUserData({ streak_days: newStreak, last_active_date: todayStr });
+      } else if (!userData.last_active_date) {
+        saveUserData({ last_active_date: todayStr });
+      }
+    }
+  }, [user, userDataLoading]);
 
   const saveMemorized = (newIds: string[]) => {
     setMemorizedIds(newIds);
