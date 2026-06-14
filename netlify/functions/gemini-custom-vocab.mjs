@@ -38,7 +38,7 @@ export const handler = async (event) => {
     const promptText = `Generate 3 high quality vocabulary items for learning English, related to the topic or word: "${cleanTopic}". Be creative, useful for daily life, and make sure the examples are helpful. Always translate words and sentences to Indonesian. Ensure each item has a unique generated ID like "custom_" plus a random number. Set the 'category' property of ALL items to exactly: "${cleanCategory}"`;
 
     const response = await ai.models.generateContent({
-      model: "gemini-1.5-flash",
+      model: "gemini-2.5-flash",
       contents: promptText,
       config: {
         systemInstruction: "You are an elite bilingual English-Indonesian linguist and language teacher. Output high-impact learning flashcards strictly structured in the requested JSON schema. Make sure phonetic guides are accurate and easy to read (IPA phonetics format like /ˈpɪl.oʊ/). For 'imageSearchTerm', output simple search keywords in English (no punctuation, max 4 words) that would fetch a beautiful photo about this word on Unsplash.",
