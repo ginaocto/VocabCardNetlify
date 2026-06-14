@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { supabase } from "../lib/supabase";
 import type { User } from "@supabase/supabase-js";
 
@@ -23,8 +23,10 @@ const DEFAULT_DATA: UserData = {
 export function useUserData(user: User | null) {
   const [data, setData] = useState<UserData>(DEFAULT_DATA);
   const [loading, setLoading] = useState(true);
+  const dataRef = useRef(data);
 
-  // Load user data from Supabase on login
+  useEffect(() => { dataRef.current = data; }, [data]);
+
   useEffect(() => {
     if (!user) { setLoading(false); return; }
 
@@ -46,7 +48,6 @@ export function useUserData(user: User | null) {
           custom_scenarios: row.custom_scenarios || [],
         });
       } else {
-        // First time user — insert default row
         await supabase.from("user_data").insert({ user_id: user.id, ...DEFAULT_DATA });
         setData(DEFAULT_DATA);
       }
@@ -55,15 +56,14 @@ export function useUserData(user: User | null) {
     load();
   }, [user]);
 
-  // Save any field update to Supabase
   const save = useCallback(async (updates: Partial<UserData>) => {
     if (!user) return;
-    const next = { ...data, ...updates };
+    const next = { ...dataRef.current, ...updates };
     setData(next);
     await supabase
       .from("user_data")
       .upsert({ user_id: user.id, ...next, updated_at: new Date().toISOString() });
-  }, [user, data]);
+  }, [user]);
 
   return { data, save, loading };
 }

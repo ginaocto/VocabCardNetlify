@@ -481,10 +481,8 @@ export default function App() {
         saveMemorized([]);
         saveStarred([]);
         setStreak(1);
-        localStorage.setItem("vocab_streak_days", "1");
         setCustomWords([]);
         saveUserData({ custom_words: [], memorized_ids: [], starred_ids: [], streak_days: 1 });
-        localStorage.removeItem("vocab_custom_words");
         setCurrentIndex(0);
         setIsFlipped(false);
         setConfirmDialog(p => ({ ...p, isOpen: false }));
@@ -874,7 +872,7 @@ export default function App() {
 
     const updatedScenarios = [...scenarios, newScenarioObj];
     setScenarios(updatedScenarios);
-    saveUserData({ custom_scenarios: updatedScenarios.filter(s => s.isCustom).map(s => ({ id: s.id, name: s.name, desc: s.desc, isCustom: true })) }); // ADD THIS
+    saveUserData({ custom_scenarios: updatedScenarios.filter(s => s.isCustom).map(s => ({ id: s.id, name: s.name, desc: s.desc, isCustom: true })) });
 
     const serializable = updatedScenarios
       .filter(s => s.isCustom)
