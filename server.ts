@@ -57,7 +57,7 @@ app.post("/api/gemini/custom-vocab", async (req, res) => {
       model: "gemini-3.5-flash",
       contents: promptText,
       config: {
-        systemInstruction: "You are an elite bilingual English-Indonesian linguist and language teacher. Output high-impact learning flashcards strictly structured in the requested JSON schema. Make sure phonetic guides are accurate and easy to read (IPA phonetics format like /ˈpɪl.oʊ/). For 'imageSearchTerm', output simple search keywords in English (no punctuation, max 4 words) that would fetch a beautiful photo about this word on Unsplash.",
+        systemInstruction: "You are an elite bilingual English-Indonesian linguist and language teacher. Output high-impact learning flashcards strictly structured in the requested JSON schema. Make sure phonetic guides are accurate and easy to read (IPA phonetics format like /ˈpɪl.oʊ/). For 'imageSearchTerm', output simple search keywords in English (no punctuation, max 4 words) that would fetch a beautiful photo about this word on Unsplash. CRITICAL: The 'meaning' field must always be written entirely in Bahasa Indonesia — never in English, even when an English phrasing would feel more natural for a dictionary-style definition.",
         responseMimeType: "application/json",
         responseSchema: {
           type: Type.ARRAY,
@@ -133,7 +133,7 @@ Make sure each vocabulary word is realistic, helpful for conversations, and has 
       model: "gemini-3.5-flash",
       contents: promptText,
       config: {
-        systemInstruction: "You are an elite bilingual English-Indonesian linguist and language teacher. Output high-impact learning flashcards strictly structured in the requested JSON schema. Make sure phonetic guides are accurate and easy to read (IPA phonetics format like /ˈpɪl.oʊ/). For 'imageSearchTerm', output simple search keywords in English (no punctuation, max 4 words) that would fetch a beautiful photo about this word on Unsplash.",
+        systemInstruction: "You are an elite bilingual English-Indonesian linguist and language teacher. Output high-impact learning flashcards strictly structured in the requested JSON schema. Make sure phonetic guides are accurate and easy to read (IPA phonetics format like /ˈpɪl.oʊ/). For 'imageSearchTerm', output simple search keywords in English (no punctuation, max 4 words) that would fetch a beautiful photo about this word on Unsplash. CRITICAL: The 'meaning' field must always be written entirely in Bahasa Indonesia — never in English, even when an English phrasing would feel more natural for a dictionary-style definition.",
         responseMimeType: "application/json",
         responseSchema: {
           type: Type.ARRAY,
