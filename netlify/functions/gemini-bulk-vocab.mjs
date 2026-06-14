@@ -39,7 +39,7 @@ export const handler = async (event) => {
     const promptText = `Generate exactly 50 dynamic, high-quality, practical, and highly useful English vocabulary words with phonetic guides & Indonesian translations specifically of relevance to the theme: "${cleanCategoryName}".\nTo prevent duplicates, DO NOT generate any of the following existing words: ${excludeList.slice(0, 150).join(", ")}.\nMake sure each vocabulary word is realistic, helpful for conversations, and has a unique generated ID starting with "bulk_" and a random string. Set the 'category' property of ALL generated items to exactly: "${cleanCategory}"`;
 
     const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash",
+      model: "gemini-2.5-flash-lite",
       contents: promptText,
       config: {
         systemInstruction: "You are an elite bilingual English-Indonesian linguist and language teacher. Output high-impact learning flashcards strictly structured in the requested JSON schema. Make sure phonetic guides are accurate and easy to read (IPA phonetics format like /ˈpɪl.oʊ/). For 'imageSearchTerm', output simple search keywords in English (no punctuation, max 4 words) that would fetch a beautiful photo about this word on Unsplash.",
