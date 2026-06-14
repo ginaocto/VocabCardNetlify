@@ -3,7 +3,7 @@ import { supabase } from "../lib/supabase";
 import { BookOpen, Loader2 } from "lucide-react";
 
 export default function AuthPage() {
-  const [mode, setMode] = useState<"login" | "register">("login");
+  const [mode, setMode] = useState<"login" | "register" | "confirm">("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -20,7 +20,9 @@ export default function AuthPage() {
     if (mode === "register") {
       const { error } = await supabase.auth.signUp({ email, password });
       if (error) setMessage({ text: error.message, type: "error" });
-      else setMessage({ text: "Akun berhasil dibuat! Silakan login.", type: "success" });
+      else {
+      setMode("confirm");
+    }
     } else {
       const { error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) setMessage({ text: "Email atau password salah.", type: "error" });
@@ -28,6 +30,28 @@ export default function AuthPage() {
     setLoading(false);
   };
 
+  if (mode === "confirm") {
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
+      <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-8 text-center">
+        <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+          <span className="text-3xl">📧</span>
+        </div>
+        <h2 className="text-2xl font-bold text-gray-800 mb-2">Cek Email Kamu!</h2>
+        <p className="text-gray-500 text-sm mb-4">
+          Kami mengirim link konfirmasi ke <strong>{email}</strong>.
+          Klik link tersebut untuk mengaktifkan akun, lalu kembali login di sini.
+        </p>
+        <button
+          onClick={() => { setMode("login"); setMessage(null as any); }}
+          className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-xl transition-colors"
+        >
+          Saya sudah konfirmasi → Login
+        </button>
+      </div>
+    </div>
+  );
+}
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
       <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-8">
@@ -38,7 +62,7 @@ export default function AuthPage() {
           </div>
           <div>
             <h1 className="text-xl font-bold text-gray-900">VocabCards</h1>
-            <p className="text-xs text-gray-500">Daily English Builder</p>
+            <p className="text-xs text-gray-500">Daily English Vocabulary</p>
           </div>
         </div>
 

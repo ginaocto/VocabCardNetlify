@@ -1066,7 +1066,7 @@ export default function App() {
                 VocabCards
               </h1>
               <span className="text-xs font-semibold text-slate-400 uppercase tracking-widest block">
-                Daily English Builder
+                Daily English Vocabulary
               </span>
             </div>
           </div>
